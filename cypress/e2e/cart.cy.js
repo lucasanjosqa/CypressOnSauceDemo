@@ -1,40 +1,52 @@
-describe('Navegação e Exibição de Produtos', () => {
-    
+describe('Carrinho de Compras', () => {
     beforeEach(() => {
         cy.visit('https://www.saucedemo.com/');
+        cy.login('standard_user', 'secret_sauce');
     });
 
-    it('Deve fazer login com credenciais válidas', () => {
-        const username = 'standard_user';
-        const password = 'secret_sauce';
+    it('Deve adicionar e verificar produtos no carrinho', () => {
+        // Adicionar produtos ao carrinho
+        cy.addProductToCart('Sauce Labs Backpack');
+        cy.verifyCartBadgeCount(1);
+        
+        cy.addProductToCart('Sauce Labs Bike Light');
+        cy.verifyCartBadgeCount(2);
 
-        cy.login(username, password);
-        cy.url().should('include', 'inventory.html')
+        // Ir para o carrinho e verificar produtos
+        cy.goToCart();
 
-     
-        cy.get('[data-test="add-to-cart-sauce-labs-backpack"]').click();
-        cy.get('[data-test="shopping-cart-badge"]').should('have.text', '1');
-        cy.get('[data-test="shopping-cart-link"]').should('be.visible');
-        cy.get('[data-test="remove-sauce-labs-backpack"]').should('have.text', 'Remove');
-        cy.get('[data-test="remove-sauce-labs-backpack"]').should('be.visible');
-        cy.get('[data-test="remove-sauce-labs-backpack"]').should('be.enabled');
-        cy.get('[data-test="shopping-cart-link"]').should('be.visible');
-        cy.get('[data-test="add-to-cart-sauce-labs-bike-light"]').click();
-        cy.get('[data-test="shopping-cart-link"]').click();
-        cy.get('[data-test="title"]').should('have.text', 'Your Cart');
+        // Verificar detalhes do primeiro produto
+        cy.verifyProductInCart(
+            'Sauce Labs Backpack',
+            '$29.99',
+            'carry.allTheThings() with the sleek, streamlined Sly Pack that melds uncompromising style with unequaled laptop and tablet protection.'
+        );
+
+        // Verificar detalhes do segundo produto
+        cy.verifyProductInCart(
+            'Sauce Labs Bike Light',
+            '$9.99',
+            'A red light isn\'t the desired state in testing but it sure helps when riding your bike at night. Water-resistant with 3 lighting modes, 1 AAA battery included.'
+        );
+
+        // Verificar elementos da interface do carrinho
         cy.get('[data-test="cart-quantity-label"]').should('have.text', 'QTY');
         cy.get('[data-test="cart-desc-label"]').should('have.text', 'Description');
-        cy.get(':nth-child(3) > [data-test="item-quantity"]').should('be.visible');
-        cy.get('[data-test="continue-shopping"]').should('be.visible');
-        cy.get('[data-test="continue-shopping"]').should('be.enabled');
-        cy.get('[data-test="checkout"]').should('be.visible');
-        cy.get('[data-test="checkout"]').should('be.enabled');
-        cy.get('[data-test="item-4-title-link"] > [data-test="inventory-item-name"]').should('have.text', 'Sauce Labs Backpack');
-        cy.get(':nth-child(3) > .cart_item_label > [data-test="inventory-item-desc"]').should('have.text', 'carry.allTheThings() with the sleek, streamlined Sly Pack that melds uncompromising style with unequaled laptop and tablet protection.');
-        cy.get(':nth-child(3) > .cart_item_label > .item_pricebar > [data-test="inventory-item-price"]').should('have.text', '$29.99');
-        cy.get('[data-test="item-0-title-link"] > [data-test="inventory-item-name"]').should('have.text', 'Sauce Labs Bike Light');
-        cy.get(':nth-child(4) > .cart_item_label > [data-test="inventory-item-desc"]').should('have.text', 'A red light isn\'t the desired state in testing but it sure helps when riding your bike at night. Water-resistant with 3 lighting modes, 1 AAA battery included.');
-        cy.get(':nth-child(4) > .cart_item_label > .item_pricebar > [data-test="inventory-item-price"]').should('have.text', '$9.99');
-    
-    })
+        cy.get('[data-test="continue-shopping"]').should('be.visible').and('be.enabled');
+        cy.get('[data-test="checkout"]').should('be.visible').and('be.enabled');
+    });
+
+    it('Deve remover produtos do carrinho', () => {
+        // Adicionar produtos
+        cy.addProductToCart('Sauce Labs Backpack');
+        cy.addProductToCart('Sauce Labs Bike Light');
+        cy.verifyCartBadgeCount(2);
+
+        // Remover produtos
+        cy.removeProductFromCart('Sauce Labs Backpack');
+        cy.verifyCartBadgeCount(1);
+
+        cy.removeProductFromCart('Sauce Labs Bike Light');
+        cy.verifyCartBadgeCount(0);
+    });
 });
